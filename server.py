@@ -91,7 +91,7 @@ def ping_server():
     while True:
         try:
             logging.info("Pinging the server to keep it active...")
-            response = requests.get('http://127.0.0.1:5000')  # Replace with your actual server URL
+            response = requests.get('https://cookingassistant-backend.onrender.com')  # Replace with your actual server URL
             if response.status_code == 200:
                 logging.info("Server is active and responded successfully.")
             else:
