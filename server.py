@@ -2,6 +2,9 @@ from flask import Flask, request, jsonify
 import pandas as pd
 import fuzzywuzzy.fuzz as fuzz
 from flask_cors import CORS
+import logging
+logging.basicConfig(level=logging.INFO)
+
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
@@ -60,11 +63,17 @@ def recommend_dishes(user_ingredients, top_n=10):
     # Return top N results with additional columns
     return df_filtered[["TranslatedRecipeName", "Missing", "Matching", "image-url", "TotalTimeInMins"]].head(top_n).to_dict(orient="records")
 
+@app.route('/')
+def home():
+    return jsonify({"message": "Server is running"}), 200
+
 @app.route('/recommend', methods=['POST'])
 def recommend():
     try:
+        logging.info("Request received.")
         # Parse input JSON
         data = request.json
+        logging.info(f"Request data: {data}")
         user_ingredients = data.get('ingredients', '')
         top_n = data.get('top_n', 10)
 
@@ -72,6 +81,7 @@ def recommend():
         results = recommend_dishes(user_ingredients, top_n)
         return jsonify({"status": "success", "results": results})
     except Exception as e:
+        logging.error(f"Error: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
 if __name__ == '__main__':
