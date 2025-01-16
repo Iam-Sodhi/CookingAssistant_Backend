@@ -1,0 +1,8 @@
+Flask==2.3.3            # Flask framework for building the API
+Flask-Cors==3.0.10      # For handling Cross-Origin Resource Sharing (CORS)
+pandas==1.5.3           # For data manipulation and analysis
+fuzzywuzzy==0.18.0      # For fuzzy string matching
+python-Levenshtein==0.21.1 # Required for fuzzywuzzy to improve performance
+gunicorn==20.1.0        # WSGI server for production deployment
+requests==2.26.0
+python-dotenv==0.19.2
