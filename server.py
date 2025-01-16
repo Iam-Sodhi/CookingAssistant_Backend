@@ -5,6 +5,7 @@ from flask_cors import CORS
 import time
 import logging
 import threading
+import requests 
 
 logging.basicConfig(level=logging.INFO)
 
