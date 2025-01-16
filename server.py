@@ -2,9 +2,11 @@ from flask import Flask, request, jsonify
 import pandas as pd
 import fuzzywuzzy.fuzz as fuzz
 from flask_cors import CORS
+import time
 import logging
-logging.basicConfig(level=logging.INFO)
+import threading
 
+logging.basicConfig(level=logging.INFO)
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
@@ -84,5 +86,21 @@ def recommend():
         logging.error(f"Error: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
+def ping_server():
+    """Ping the server periodically to keep it active."""
+    while True:
+        try:
+            logging.info("Pinging the server to keep it active...")
+            response = requests.get('http://127.0.0.1:5000')  # Replace with your actual server URL
+            if response.status_code == 200:
+                logging.info("Server is active and responded successfully.")
+            else:
+                logging.warning(f"Server responded with status code: {response.status_code}")
+        except Exception as e:
+            logging.error(f"Error while pinging the server: {e}")
+        time.sleep(300)  # Ping every 5 minutes
+
+
 if __name__ == '__main__':
+    threading.Thread(target=ping_server, daemon=True).start()
     app.run(debug=True)
