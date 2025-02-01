@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 import pandas as pd
 import fuzzywuzzy.fuzz as fuzz
 from flask_cors import CORS
+from fractions import Fraction
 import time
 import logging
 import threading
@@ -74,8 +75,8 @@ def recommend_dishes(user_ingredients, top_n=10):
 def load_recipe_data():
     with open("recipe_data.json", "r", encoding="utf-8") as file:
         return json.load(file)
+from fractions import Fraction
 
-# Adjust ingredient quantities based on the desired number of servings
 def adjust_ingredient_quantities(ingredients, default_servings, desired_servings):
     adjusted_ingredients = []
     for ingredient in ingredients:
@@ -83,19 +84,26 @@ def adjust_ingredient_quantities(ingredients, default_servings, desired_servings
 
         # Only adjust if the quantity is not "as required"
         if ingredient["Quantity"].lower() != "as required":
-            # If the quantity is a number (not "as required"), adjust it
             try:
-                original_quantity = float(adjusted_ingredient["Quantity"])
+                # Handle fractions like "1/2" or "3/4"
+                original_quantity = ingredient["Quantity"]
+                if '/' in original_quantity:
+                    # If the quantity is a fraction, convert it to a float
+                    original_quantity = float(Fraction(original_quantity))
+                else:
+                    # If it's a simple number, convert it to a float
+                    original_quantity = float(original_quantity)
+
                 adjusted_quantity = original_quantity * (desired_servings / default_servings)
                 adjusted_ingredient["Quantity"] = round(adjusted_quantity, 2)
+
             except ValueError:
-                # If the quantity is a complex value (e.g., "1/2"), handle separately
+                # If the quantity is a complex value (e.g., "as required"), handle separately
                 pass
 
         adjusted_ingredients.append(adjusted_ingredient)
-    
-    return adjusted_ingredients
 
+    return adjusted_ingredients
 
 @app.route('/')
 def home():
@@ -126,6 +134,13 @@ def adjust_recipe():
         recipe_name = data.get("recipe_name")
         desired_servings = data.get("desired_servings")
 
+        print("Desired servings type",type(desired_servings))
+        # Convert desired_servings to integer
+        try:
+            desired_servings = int(desired_servings)
+        except ValueError:
+            return jsonify({"status": "error", "message": "Invalid desired_servings value, must be an integer"}), 400
+
         # Load the recipe data from JSON
         recipe_data = load_recipe_data()
 
@@ -142,6 +157,7 @@ def adjust_recipe():
         course = recipe["course"]
         diet = recipe["diet"]
 
+
         # Adjust ingredients for the desired servings
         adjusted_ingredients = adjust_ingredient_quantities(ingredients, default_servings, desired_servings)
 
@@ -149,6 +165,7 @@ def adjust_recipe():
             "status": "success",
             "recipe_name": recipe_name,
             "desired_servings": desired_servings,
+            "default_servings": default_servings,
             "ingredients": adjusted_ingredients,
             "image_url": image_url,
             "course": course,
