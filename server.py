@@ -135,8 +135,12 @@ def adjust_recipe():
 
         # Get the default recipe details
         recipe = recipe_data[recipe_name]
+        print(recipe)
         default_servings = recipe["DefaultServings"]
         ingredients = recipe["Ingredients"]
+        image_url= recipe["image-url"]
+        course = recipe["course"]
+        diet = recipe["diet"]
 
         # Adjust ingredients for the desired servings
         adjusted_ingredients = adjust_ingredient_quantities(ingredients, default_servings, desired_servings)
@@ -145,7 +149,10 @@ def adjust_recipe():
             "status": "success",
             "recipe_name": recipe_name,
             "desired_servings": desired_servings,
-            "ingredients": adjusted_ingredients
+            "ingredients": adjusted_ingredients,
+            "image_url": image_url,
+            "course": course,
+            "diet": diet
         })
     
     except Exception as e:
