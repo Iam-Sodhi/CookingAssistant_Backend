@@ -179,7 +179,13 @@ def adjust_recipe():
 
 @app.route("/weekly-menu")
 def weekly_menu():
-    return jsonify(generate_weekly_menu())
+    # Get list of diet preferences from the query params
+    preferred_diets = request.args.getlist("diet")
+
+    # Call the menu generator with filtering
+    menu = generate_weekly_menu(preferred_diets=preferred_diets)
+
+    return jsonify(menu)
 
 
 

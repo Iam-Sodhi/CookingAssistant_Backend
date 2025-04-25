@@ -1,4 +1,3 @@
-# menu_prediction.py
 import json
 import random
 
@@ -6,7 +5,6 @@ import random
 def load_recipe_data():
     with open("recipe_data.json", "r", encoding="utf-8") as file:
         return json.load(file)
-
 
 with open("course_diet_values.json", "r") as f:
     course_diet_map = json.load(f)
@@ -20,7 +18,7 @@ def get_meal_type(course):
     course = course.lower()
     if "breakfast" in course or "brunch" in course:
         return "Breakfast"
-    elif any(term in course for term in ["main", "lunch", "dinner", "side", "one pot"]):
+    elif any(term in course for term in ["main", "lunch", "dinner", "one pot"]):
         return "Lunch/Dinner"
     elif any(term in course for term in ["snack", "appetizer", "dessert"]):
         return "Snack/Dessert"
@@ -33,6 +31,8 @@ def categorize_recipes(preferred_diets=None):
     categorized = {
         "Breakfast": [],
         "Lunch/Dinner": [],
+        "Side Dish": [],
+        "Snack/Dessert": [],
     }
 
     for dish, details in recipe_data.items():
@@ -44,11 +44,19 @@ def categorize_recipes(preferred_diets=None):
             continue
 
         # Sort into appropriate meal category
-        if "breakfast" in course:
-            categorized["Breakfast"].append(dish)
-        elif any(k in course for k in ["lunch", "dinner", "main course", "side dish", "one pot dish"]):
-            categorized["Lunch/Dinner"].append(dish)
+        meal_type = get_meal_type(course)
 
+        if meal_type == "Breakfast":
+            categorized["Breakfast"].append(dish)
+        elif meal_type == "Lunch/Dinner":
+            categorized["Lunch/Dinner"].append(dish)
+        elif meal_type == "Snack/Dessert":
+            categorized["Snack/Dessert"].append(dish)
+        else:
+            # Optionally handle side dishes or other categories
+            if "side" in course:
+                categorized["Side Dish"].append(dish)
+                
     return categorized
 
 
@@ -57,9 +65,13 @@ def generate_weekly_menu(preferred_diets=None):
 
     breakfast_options = categorized["Breakfast"].copy()
     lunch_dinner_options = categorized["Lunch/Dinner"].copy()
+    side_dish_options = categorized["Side Dish"].copy()
+    snack_dessert_options = categorized["Snack/Dessert"].copy()
 
     random.shuffle(breakfast_options)
     random.shuffle(lunch_dinner_options)
+    random.shuffle(side_dish_options)
+    random.shuffle(snack_dessert_options)
 
     weekly_menu = []
 
@@ -67,13 +79,16 @@ def generate_weekly_menu(preferred_diets=None):
         breakfast = breakfast_options.pop() if breakfast_options else None
         lunch = lunch_dinner_options.pop() if lunch_dinner_options else None
         dinner = lunch_dinner_options.pop() if lunch_dinner_options else None
+        side_dish = side_dish_options.pop() if side_dish_options else None
+        snack = snack_dessert_options.pop() if snack_dessert_options else None
 
         weekly_menu.append({
             "Day": f"Day {day}",
             "Breakfast": breakfast,
             "Lunch": lunch,
-            "Dinner": dinner
+            "Dinner": dinner,
+            "Side Dish": side_dish,
+            "Snack/Dessert": snack
         })
 
     return weekly_menu
-
