@@ -2,10 +2,12 @@ from flask import Flask, request, jsonify
 import pandas as pd
 import fuzzywuzzy.fuzz as fuzz
 from flask_cors import CORS
+from fractions import Fraction
 import time
 import logging
 import threading
 import requests 
+import json
 
 logging.basicConfig(level=logging.INFO)
 
@@ -20,6 +22,7 @@ df["Ingredient-count"] = df["P-Ingredients"].apply(lambda x: len(x.split(",")))
 df = df[df["Ingredient-count"] > 4]
 df.reset_index(drop=True, inplace=True)
 
+#. Recipe Prediction
 def recommend_dishes(user_ingredients, top_n=10):
     def MainCook(Pingredients):
         """Calculate fuzzy match score."""
@@ -66,6 +69,42 @@ def recommend_dishes(user_ingredients, top_n=10):
     # Return top N results with additional columns
     return df_filtered[["TranslatedRecipeName", "Missing", "Matching", "image-url", "TotalTimeInMins"]].head(top_n).to_dict(orient="records")
 
+
+# Quantity Estimation
+# Load recipe data from your JSON file
+def load_recipe_data():
+    with open("recipe_data.json", "r", encoding="utf-8") as file:
+        return json.load(file)
+from fractions import Fraction
+
+def adjust_ingredient_quantities(ingredients, default_servings, desired_servings):
+    adjusted_ingredients = []
+    for ingredient in ingredients:
+        adjusted_ingredient = ingredient.copy()
+
+        # Only adjust if the quantity is not "as required"
+        if ingredient["Quantity"].lower() != "as required":
+            try:
+                # Handle fractions like "1/2" or "3/4"
+                original_quantity = ingredient["Quantity"]
+                if '/' in original_quantity:
+                    # If the quantity is a fraction, convert it to a float
+                    original_quantity = float(Fraction(original_quantity))
+                else:
+                    # If it's a simple number, convert it to a float
+                    original_quantity = float(original_quantity)
+
+                adjusted_quantity = original_quantity * (desired_servings / default_servings)
+                adjusted_ingredient["Quantity"] = round(adjusted_quantity, 2)
+
+            except ValueError:
+                # If the quantity is a complex value (e.g., "as required"), handle separately
+                pass
+
+        adjusted_ingredients.append(adjusted_ingredient)
+
+    return adjusted_ingredients
+
 @app.route('/')
 def home():
     return jsonify({"message": "Server is running"}), 200
@@ -87,6 +126,58 @@ def recommend():
         logging.error(f"Error: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
+@app.route('/quantity_estimation', methods=['POST'])
+def adjust_recipe():
+    try:
+        # Parse the input JSON
+        data = request.json
+        recipe_name = data.get("recipe_name")
+        desired_servings = data.get("desired_servings")
+
+        print("Desired servings type",type(desired_servings))
+        # Convert desired_servings to integer
+        try:
+            desired_servings = int(desired_servings)
+        except ValueError:
+            return jsonify({"status": "error", "message": "Invalid desired_servings value, must be an integer"}), 400
+
+        # Load the recipe data from JSON
+        recipe_data = load_recipe_data()
+
+        # Check if the recipe exists in the data
+        if recipe_name not in recipe_data:
+            return jsonify({"status": "error", "message": "Recipe not found"}), 404
+
+        # Get the default recipe details
+        recipe = recipe_data[recipe_name]
+        print(recipe)
+        default_servings = recipe["DefaultServings"]
+        ingredients = recipe["Ingredients"]
+        image_url= recipe["image-url"]
+        course = recipe["course"]
+        diet = recipe["diet"]
+
+
+        # Adjust ingredients for the desired servings
+        adjusted_ingredients = adjust_ingredient_quantities(ingredients, default_servings, desired_servings)
+
+        return jsonify({
+            "status": "success",
+            "recipe_name": recipe_name,
+            "desired_servings": desired_servings,
+            "default_servings": default_servings,
+            "ingredients": adjusted_ingredients,
+            "image_url": image_url,
+            "course": course,
+            "diet": diet
+        })
+    
+    except Exception as e:
+        logging.error(f"Error: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+    
 def ping_server():
     """Ping the server periodically to keep it active."""
     while True:

@@ -1,0 +1,36 @@
+{
+    "course_values": [
+        "Appetizer",
+        "Brunch",
+        "Dessert",
+        "Dinner",
+        "Eggetarian",
+        "High Protein Vegetarian",
+        "Indian Breakfast",
+        "Lunch",
+        "Main Course",
+        "No Onion No Garlic (Sattvic)",
+        "Non Vegeterian",
+        "North Indian Breakfast",
+        "One Pot Dish",
+        "Side Dish",
+        "Snack",
+        "South Indian Breakfast",
+        "Sugar Free Diet",
+        "Vegan",
+        "Vegetarian",
+        "World Breakfast"
+    ],
+    "diet_values": [
+        "Diabetic Friendly",
+        "Eggetarian",
+        "Gluten Free",
+        "High Protein Non Vegetarian",
+        "High Protein Vegetarian",
+        "No Onion No Garlic (Sattvic)",
+        "Non Vegeterian",
+        "Sugar Free Diet",
+        "Vegan",
+        "Vegetarian"
+    ]
+}

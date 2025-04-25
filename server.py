@@ -8,6 +8,7 @@ import logging
 import threading
 import requests 
 import json
+from menu_prediction import generate_weekly_menu  
 
 logging.basicConfig(level=logging.INFO)
 
@@ -175,6 +176,11 @@ def adjust_recipe():
     except Exception as e:
         logging.error(f"Error: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route("/weekly-menu")
+def weekly_menu():
+    return jsonify(generate_weekly_menu())
+
 
 
     
