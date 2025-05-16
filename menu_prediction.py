@@ -59,7 +59,6 @@ def categorize_recipes(preferred_diets=None):
                 
     return categorized
 
-
 def generate_weekly_menu(preferred_diets=None):
     categorized = categorize_recipes(preferred_diets)
 
@@ -73,9 +72,12 @@ def generate_weekly_menu(preferred_diets=None):
     random.shuffle(side_dish_options)
     random.shuffle(snack_dessert_options)
 
+    # Use weekday names
+    weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+
     weekly_menu = []
 
-    for day in range(1, 8):
+    for i in range(7):
         breakfast = breakfast_options.pop() if breakfast_options else None
         lunch = lunch_dinner_options.pop() if lunch_dinner_options else None
         dinner = lunch_dinner_options.pop() if lunch_dinner_options else None
@@ -83,7 +85,7 @@ def generate_weekly_menu(preferred_diets=None):
         snack = snack_dessert_options.pop() if snack_dessert_options else None
 
         weekly_menu.append({
-            "Day": f"Day {day}",
+            "Day": weekdays[i],
             "Breakfast": breakfast,
             "Lunch": lunch,
             "Dinner": dinner,

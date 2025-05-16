@@ -8,6 +8,7 @@ import logging
 import threading
 import requests 
 import json
+import math
 from menu_prediction import generate_weekly_menu  
 
 logging.basicConfig(level=logging.INFO)
@@ -51,6 +52,11 @@ def recommend_dishes(user_ingredients, top_n=10):
     df_filtered[["Missing", "Matching"]] = df_filtered["P-Ingredients"].apply(
         lambda x: pd.Series(MissingAndMatching(x))
     )
+
+    # Filter: Keep only dishes where matching ingredients > half of user ingredients
+    min_required_matches = len(user_ingredients.split(",")) // 2 + 1
+    df_filtered["MatchCount"] = df_filtered["Matching"].apply(lambda x: len(x.split(",")) if x else 0)
+    df_filtered = df_filtered[df_filtered["MatchCount"] >= min_required_matches]
 
     # Exclude rows with no matches
     df_filtered = df_filtered[df_filtered["Matching"].str.strip() != ""]
@@ -96,7 +102,7 @@ def adjust_ingredient_quantities(ingredients, default_servings, desired_servings
                     original_quantity = float(original_quantity)
 
                 adjusted_quantity = original_quantity * (desired_servings / default_servings)
-                adjusted_ingredient["Quantity"] = round(adjusted_quantity, 2)
+                adjusted_ingredient["Quantity"] = str(math.ceil(adjusted_quantity))
 
             except ValueError:
                 # If the quantity is a complex value (e.g., "as required"), handle separately
